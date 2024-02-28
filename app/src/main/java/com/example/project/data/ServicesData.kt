@@ -10,6 +10,8 @@ data class ServicesData(
     val serviceImage: String? = null,
     val serviceDescription: String? = null,
     val time: Long? = null,
+    var imageUrl: String? = null,
+    val description:String? = null
 ) {
     fun toMap() = mapOf(
         "userId" to userId,

@@ -1,5 +1,6 @@
 package com.example.project.common
 
+import ServiceScreen
 import androidx.compose.runtime.Composable
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.compose.NavHost
@@ -10,7 +11,9 @@ import com.example.project.presentation.common.NotificationMessage
 import com.example.project.presentation.screens.auth.LoginScreen
 import com.example.project.presentation.screens.auth.SignupScreen
 import com.example.project.presentation.screens.main.MyProfileScreen
-import com.example.project.presentation.screens.main.ServiceScreen
+import com.example.project.presentation.screens.main.MyServicesScreen
+import com.example.project.presentation.screens.main.SearchScreen
+
 
 @Composable
 fun DemandApp() {
@@ -28,10 +31,17 @@ fun DemandApp() {
         composable(Routes.Services.route) {
             ServiceScreen(navController = navController, vm = vm)
         }
+        composable(Routes.Search.route) {
+            SearchScreen(navController = navController, vm = vm)
+        }
+        composable(Routes.MyServices.route) {
+            MyServicesScreen(navController = navController, vm = vm)
+        }
 
         composable(Routes.Profile.route) {
             MyProfileScreen(navController = navController, vm = vm)
         }
+
 
     }
 }

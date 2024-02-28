@@ -34,6 +34,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
 import com.example.project.MainViewModel
+import com.example.project.common.Routes
 import com.example.project.presentation.common.CommonImage
 import com.example.project.presentation.common.ProgressSpinner
 
@@ -56,10 +57,11 @@ fun MyProfileScreen(navController: NavController, vm: MainViewModel) {
             onNameChange = { name = it },
             onUsernameChange = { username = it },
             onBioChange = { bio = it },
-            onSave = { },
-            onBack = {  },
+            onSave = { vm.updateProfileData(name, username, bio)},
+            onBack = { navController.navigate(Routes.Services.route)  },
             onLogout = {
-
+vm.onLogout()
+                navController.navigate(Routes.Login.route)
             }
         )
     }

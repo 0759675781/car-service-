@@ -41,7 +41,7 @@ enum class BottomNavigationItem(val icon: ImageVector, val navDestination: Route
 @Composable
 fun BottomNavigationMenu(selectedItem: BottomNavigationItem, navController: NavController) {
     Row(
-        modifier = Modifier
+        modifier = androidx.compose.ui.Modifier
             .fillMaxWidth()
             .wrapContentHeight()
             .padding(top = 4.dp)
@@ -56,7 +56,7 @@ fun BottomNavigationMenu(selectedItem: BottomNavigationItem, navController: NavC
         for (item in BottomNavigationItem.values()) {
             Image(imageVector = item.icon, contentDescription = null,
 
-         modifier= Modifier
+         modifier= androidx.compose.ui.Modifier
 
                     .size(40.dp)
                     .padding(5.dp)

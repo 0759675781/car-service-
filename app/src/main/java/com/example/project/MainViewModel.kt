@@ -1,5 +1,27 @@
 package com.example.project
 
+//import androidx.compose.foundation.layout.Column
+//import androidx.compose.foundation.layout.Spacer
+//import androidx.compose.foundation.layout.fillMaxSize
+//import androidx.compose.foundation.layout.fillMaxWidth
+//import androidx.compose.foundation.layout.height
+//import androidx.compose.foundation.layout.padding
+//import androidx.compose.foundation.layout.wrapContentHeight
+//import androidx.compose.foundation.rememberScrollState
+//import androidx.compose.material3.Button
+//import androidx.compose.material3.MaterialTheme
+//import androidx.compose.material3.Text
+//import androidx.compose.runtime.Composable
+//import androidx.compose.ui.Alignment
+//import androidx.compose.ui.Modifier
+//import androidx.compose.ui.text.font.FontWeight
+//import androidx.compose.ui.unit.dp
+//import androidx.compose.ui.unit.sp
+//import androidx.navigation.NavController
+//import com.example.project.common.Routes
+//import com.example.project.presentation.common.CheckSignedIn
+//import com.example.project.presentation.common.ProgressSpinner
+import CarParkingService
 import android.net.Uri
 import android.util.Log
 import androidx.compose.runtime.MutableState
@@ -9,6 +31,7 @@ import com.example.project.common.USERS
 import com.example.project.data.Event
 import com.example.project.data.ServicesData
 import com.example.project.data.UserData
+import com.example.project.presentation.screens.main.PaymentGateway
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.firestore.QuerySnapshot
@@ -33,6 +56,47 @@ import javax.inject.Inject
 class MainViewModel @Inject constructor(
     val auth: FirebaseAuth, val db: FirebaseFirestore, val storage: FirebaseStorage
 ) : ViewModel() {
+    fun onNewService(uri: Uri, description: String, onServiceSuccess: () -> Unit) {
+        uploadImage(uri) {
+            onCreateService(it, description, onServiceSuccess)
+        }
+
+    }
+
+    private fun constructPaymentForm(): Any {
+        // Implement this function to construct the payment form UI
+        // This function should return an object representing the payment form UI
+        // Example:
+        // return PaymentForm(
+        //     creditCardNumber = "1234 5678 9012 3456",
+        //     expirationDate = "12/24",
+        //     cvv = "123"
+        // )
+        // Placeholder implementation
+        return Any() // Return your actual payment form UI object
+    }
+
+    private fun collectPaymentDetails(paymentForm: Any): PaymentDetails {
+        // Implement this function to collect payment details from the form UI
+        // This function should parse the input fields of the payment form
+        // and return a data structure containing the collected payment details
+        // Example:
+        // return PaymentDetails(
+        //     amount = 99.99,
+        //     currency = "USD",
+        //     description = "Payment for services"
+        // )
+        // Placeholder implementation
+        return PaymentDetails(0.0, "", "") // Return your actual payment details
+    }
+
+    private fun showPaymentSuccessMessage() {
+        // Implement this function to show a success message when payment is successful
+    }
+
+    private fun showPaymentErrorMessage(errorMessage: Any) {
+        // Implement this function to show an error message when payment fails
+    }
 
     /**
      * ViewModel class for the main screen.
@@ -285,22 +349,127 @@ class MainViewModel @Inject constructor(
     fun uploadProfileImage(uri: Uri) {
         uploadImage(uri) {
             createOrUpdateProfile(imageUrl = it.toString())
-            updateServiceImageData(it.toString())
+//            updateServiceImageData(it.toString())
         }
     }
 //Upload service image
+fun uploadServiceImage(uri: Uri) {
+    uploadImage(uri) {
+        updateServiceImageData(it.toString())
+    }
+}
 
     //create service
     private fun onCreateService(imageUri: Uri, description: String, onPostSuccess: () -> Unit){
         //fetch userid
-        //get the current username
-        //get the current user image
+        val userId = auth.currentUser?.uid
 
+        //get the current username
+        val currentUserData = userData.value
+        val username = currentUserData?.username
+
+        //get the current user image
+        val userImage = currentUserData?.imageUrl
+        val imageUrl = ""
         //check if the current user id is null
+        userId?.let {
         //Assign the services data model a variable
+            val serviceData = ServicesData(
+                userId = userId,
+                username = userData.value?.username ?: "",
+                userImage = userData.value?.imageUrl ?: "",
+                imageUrl = imageUrl.toString(),
+                description = description,
+                time = System.currentTimeMillis()
+            )
+            db.collection("services")
+                .add(serviceData)
+                .addOnSuccessListener {
+                    onPostSuccess.invoke()
+                }
+                .addOnFailureListener { exc ->
+                    handleException(exc, "Service creation failed")
+                }
+            // Upload the service image
+            uploadServiceImage(imageUri)
         //use the set method to set the data
+// Set the image URL in the service data
+            serviceData.imageUrl = imageUri.toString()
+            // Add the service data to Firestore
+            db.collection("services")
+                .add(serviceData)
+                .addOnSuccessListener {
+                    onPostSuccess.invoke()
+                }
+                .addOnFailureListener { exc ->
+                    handleException(exc, "Service creation failed")
+                }
+        }
+    }
+
+    fun initiatePayment() {
+        // 1. Construct Payment Form UI
+        val paymentForm = constructPaymentForm()
+
+        // 2. Collect Payment Details
+        val paymentDetails = collectPaymentDetails(paymentForm)
+
+        // 3. Submit Payment Request
+        val paymentResult = PaymentGateway.submitPayment(paymentDetails)
+
+        // 4. Handle Payment Response
+        if (paymentResult.isSuccess()) {
+            // Payment successful, update UI accordingly
+            showPaymentSuccessMessage()
+        } else {
+            // Payment failed, display error message
+            val errorMessage = paymentResult.getErrorMessage()
+            if (errorMessage != null) {
+                showPaymentErrorMessage(errorMessage)
+            }
+        }
+    }
+
+
+
+
+    fun addToCart(service: CarParkingService) {
+        data class CarParkingService(
+            val id: String,
+            val name: String,
+            val location: String,
+            val price: Double
+        )
 
     }
+
+
+    companion object {
+        fun initiatePayment(mainViewModel: MainViewModel) {
+            // 1. Construct Payment Form UI
+            val paymentForm = mainViewModel.constructPaymentForm()
+
+            // 2. Collect Payment Details
+            val paymentDetails = mainViewModel.collectPaymentDetails(paymentForm)
+
+            // 3. Submit Payment Request
+            val paymentResult = PaymentGateway.submitPayment(paymentDetails)
+
+            // 4. Handle Payment Response
+            if (paymentResult.isSuccess()) {
+                // Payment successful, update UI accordingly
+                mainViewModel.showPaymentSuccessMessage()
+            } else {
+                // Payment failed, display error message
+                val errorMessage = paymentResult.getErrorMessage()
+                if (errorMessage != null) {
+                    mainViewModel.showPaymentErrorMessage(errorMessage)
+                }
+            }
+        }
+    }
+}
+
     private fun updateServiceImageData(imageUrl: String) {
 
 
@@ -313,8 +482,24 @@ class MainViewModel @Inject constructor(
         }
         val sortedServices = newServices.sortedByDescending { it.time }
         outState.value = sortedServices
-    }
-    //Add roles controller
+    } // Import your payment gateway SDK if you haven't already done so
+
+// Define PaymentDetails data class
+// Inside MainViewModel class
+
+// Define PaymentDetails data class
+data class PaymentDetails(
+    val amount: Double,
+    val currency: String,
+    val description: String
+)
+
+// Import your payment gateway SDK if you haven't already done so
+// Replace PaymentGateway with your actual payment gateway SDK
 
 
-}
+
+
+//Add roles controller
+
+

@@ -7,6 +7,6 @@ sealed class Routes(val route:String){
     object Services:Routes("services")
     object MyServices:Routes("myservices")
     object Search:Routes("search")
-
-
+  object Logout:Routes("Logout")
+object PaymentGateway:Routes("PaymentGateway")
 }
